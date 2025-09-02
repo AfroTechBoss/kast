@@ -376,7 +376,7 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   <Link href={`/campaign/${campaign.id}`}>
-                    <Button variant="outline" size="sm">
+                    <Button variant="secondary" size="sm">
                       <ExternalLink className="w-3 h-3 mr-1" />
                       View
                     </Button>
