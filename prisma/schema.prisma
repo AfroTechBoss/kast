@@ -1,0 +1,271 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model with Farcaster integration
+model User {
+  id                    String   @id @default(cuid())
+  email                 String?  @unique
+  username              String   @unique
+  displayName           String?
+  bio                   String?
+  profileImageUrl       String?
+  walletAddress         String?  @unique
+  
+  // Farcaster specific fields
+  farcasterFid          String?  @unique
+  custodyAddress        String?
+  verifications         String[] // Array of verified addresses
+  followerCount         Int      @default(0)
+  followingCount        Int      @default(0)
+  
+  // Engagement metrics
+  engagementScore       Float    @default(0)
+  totalRewards          Float    @default(0)
+  
+  // Timestamps
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  lastActiveAt          DateTime @default(now())
+  
+  // Relations
+  campaigns             Campaign[]
+  participations        CampaignParticipant[]
+  rewards               Reward[]
+  sessions              UserSession[]
+  castEngagements       CastEngagement[]
+  moderationActions     ModerationAction[]
+  
+  @@map("users")
+}
+
+// User sessions for authentication
+model UserSession {
+  id          String   @id @default(cuid())
+  userId      String
+  token       String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  lastUsedAt  DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_sessions")
+}
+
+// Campaign model
+model Campaign {
+  id                    String   @id @default(cuid())
+  title                 String
+  description           String
+  imageUrl              String?
+  hashtags              String[] // Array of campaign hashtags
+  
+  // Campaign settings
+  status                CampaignStatus @default(DRAFT)
+  startDate             DateTime
+  endDate               DateTime
+  maxParticipants       Int?
+  
+  // Reward settings
+  totalRewardPool       Float    @default(0)
+  rewardPerEngagement   Float    @default(0.1)
+  
+  // Creator
+  creatorId             String
+  creator               User     @relation(fields: [creatorId], references: [id])
+  
+  // Timestamps
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relations
+  participants          CampaignParticipant[]
+  rewards               Reward[]
+  castEngagements       CastEngagement[]
+  
+  @@map("campaigns")
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+// Campaign participation
+model CampaignParticipant {
+  id                    String   @id @default(cuid())
+  userId                String
+  campaignId            String
+  
+  // Participation metrics
+  engagementScore       Float    @default(0)
+  totalCasts            Int      @default(0)
+  totalRewards          Float    @default(0)
+  
+  // Sync timestamps
+  joinedAt              DateTime @default(now())
+  lastEngagementSync    DateTime @default(now())
+  lastEngagementUpdate  DateTime @default(now())
+  
+  // Relations
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaign              Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, campaignId])
+  @@map("campaign_participants")
+}
+
+// Farcaster cast engagement tracking
+model CastEngagement {
+  id                    String   @id @default(cuid())
+  castHash              String   @unique
+  userId                String
+  campaignId            String
+  farcasterFid          String
+  
+  // Cast content
+  text                  String
+  
+  // Engagement metrics
+  engagementScore       Float    @default(0)
+  likeCount             Int      @default(0)
+  recastCount           Int      @default(0)
+  replyCount            Int      @default(0)
+  
+  // Timestamps
+  timestamp             DateTime // Original cast timestamp
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relations
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaign              Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  @@map("cast_engagements")
+}
+
+// Reward tracking
+model Reward {
+  id                    String   @id @default(cuid())
+  userId                String
+  campaignId            String
+  
+  // Reward details
+  amount                Float
+  reason                String
+  status                RewardStatus @default(PENDING)
+  
+  // Transaction details
+  transactionHash       String?
+  blockNumber           Int?
+  
+  // Timestamps
+  earnedAt              DateTime @default(now())
+  claimedAt             DateTime?
+  
+  // Relations
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaign              Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  @@map("rewards")
+}
+
+enum RewardStatus {
+  PENDING
+  CLAIMED
+  FAILED
+  CANCELLED
+}
+
+// Content moderation
+model ModerationAction {
+  id                    String   @id @default(cuid())
+  targetType            ModerationTargetType
+  targetId              String   // Cast hash, user ID, etc.
+  
+  // Action details
+  action                ModerationActionType
+  reason                String
+  severity              ModerationSeverity
+  
+  // Moderator (can be system or user)
+  moderatorId           String?
+  moderator             User?    @relation(fields: [moderatorId], references: [id])
+  
+  // Timestamps
+  createdAt             DateTime @default(now())
+  expiresAt             DateTime?
+  
+  @@map("moderation_actions")
+}
+
+enum ModerationTargetType {
+  CAST
+  USER
+  CAMPAIGN
+}
+
+enum ModerationActionType {
+  WARNING
+  HIDE_CONTENT
+  SUSPEND_USER
+  BAN_USER
+  REMOVE_FROM_CAMPAIGN
+}
+
+enum ModerationSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// Farcaster profile cache
+model FarcasterProfile {
+  id                    String   @id @default(cuid())
+  fid                   String   @unique
+  
+  // Profile data
+  username              String
+  displayName           String?
+  bio                   String?
+  profileImageUrl       String?
+  custodyAddress        String
+  verifications         String[]
+  
+  // Social metrics
+  followerCount         Int      @default(0)
+  followingCount        Int      @default(0)
+  
+  // Cache timestamps
+  lastSyncAt            DateTime @default(now())
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@map("farcaster_profiles")
+}
+
+// System configuration
+model SystemConfig {
+  id                    String   @id @default(cuid())
+  key                   String   @unique
+  value                 String
+  description           String?
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@map("system_config")
+}

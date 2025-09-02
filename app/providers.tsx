@@ -5,6 +5,7 @@ import { WagmiConfig, createConfig, configureChains } from 'wagmi'
 import { base } from 'wagmi/chains'
 import { publicProvider } from 'wagmi/providers/public'
 import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit'
+import { FrameProvider } from '../components/FrameProvider'
 import '@rainbow-me/rainbowkit/styles.css'
 
 // Configure chains & providers
@@ -94,15 +95,17 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   return (
-    <WagmiConfig config={wagmiConfig}>
-      <RainbowKitProvider
-        chains={chains}
-        theme={customTheme}
-        modalSize="compact"
-        coolMode
-      >
-        {children}
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <FrameProvider>
+      <WagmiConfig config={wagmiConfig}>
+        <RainbowKitProvider
+          chains={chains}
+          theme={customTheme}
+          modalSize="compact"
+          coolMode
+        >
+          {children}
+        </RainbowKitProvider>
+      </WagmiConfig>
+    </FrameProvider>
   )
 }
