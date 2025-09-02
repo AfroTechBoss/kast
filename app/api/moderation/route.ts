@@ -1,12 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { contentModerator } from '@/lib/moderation/moderator';
-import { withAuth } from '@/lib/auth/middleware';
+import { farcasterSigner } from '@/lib/farcaster/signer';
 import { PrismaClient } from '@prisma/client';
+import { AuthenticatedUser } from '@/lib/auth/middleware';
 
 const prisma = new PrismaClient();
 
+// Helper function to authenticate user
+async function authenticateUser(req: NextRequest, required: boolean = true): Promise<AuthenticatedUser | null> {
+  try {
+    const sessionToken = 
+      req.cookies.get('session_token')?.value ||
+      req.headers.get('Authorization')?.replace('Bearer ', '');
+
+    if (!sessionToken) {
+      if (required) {
+        throw new Error('Authentication required');
+      }
+      return null;
+    }
+
+    const user = await farcasterSigner.verifySession(sessionToken);
+    
+    if (!user && required) {
+      throw new Error('Invalid or expired session');
+    }
+
+    return user;
+  } catch (error) {
+    if (required) {
+      throw error;
+    }
+    return null;
+  }
+}
+
 // Get moderation statistics and rules
-async function handleGET(req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const action = searchParams.get('action');
@@ -75,11 +105,17 @@ async function handleGET(req: NextRequest) {
   }
 }
 
-export const GET = withAuth(handleGET, { required: false });
-
 // Moderate content or user
-async function handlePOST(req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
+    const user = await authenticateUser(req, true);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const { action, targetType, targetId, castData, userId } = await req.json();
 
     if (!action || !['moderate_cast', 'moderate_user', 'update_rule'].includes(action)) {
@@ -141,13 +177,18 @@ async function handlePOST(req: NextRequest) {
   }
 }
 
-export const POST = withAuth(handlePOST);
-
 // Execute moderation action
-async function handlePUT(req: NextRequest) {
+export async function PUT(req: NextRequest) {
   try {
+    const user = await authenticateUser(req, true);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const { actionType, targetType, targetId, reason, severity, expiresAt } = await req.json();
-    const user = req.user;
 
     if (!actionType || !targetType || !targetId) {
       return NextResponse.json(
@@ -223,11 +264,17 @@ async function handlePUT(req: NextRequest) {
   }
 }
 
-export const PUT = withAuth(handlePUT);
-
 // Delete or reverse moderation action
-async function handleDELETE(req: NextRequest) {
+export async function DELETE(req: NextRequest) {
   try {
+    const user = await authenticateUser(req, true);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const actionId = searchParams.get('actionId');
 
@@ -286,5 +333,3 @@ async function handleDELETE(req: NextRequest) {
     );
   }
 }
-
-export const DELETE = withAuth(handleDELETE);

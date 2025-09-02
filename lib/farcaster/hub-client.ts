@@ -144,42 +144,62 @@ export class FarcasterHubClient {
         followerCount: profile.followerCount || 0,
       });
 
+      // Get or create user first
+      let user = await prisma.user.findFirst({
+        where: {
+          farcasterFid: fid.toString(),
+        },
+      });
+
+      if (!user) {
+        // Create user if doesn't exist
+        user = await this.syncUserData(fid);
+      }
+
       // Store or update cast engagement data
       const castEngagement = await prisma.castEngagement.upsert({
         where: {
           castHash,
         },
         update: {
-          likes: reactions.likes,
-          recasts: reactions.recasts,
-          replies: reactions.replies,
+          likeCount: reactions.likes,
+          recastCount: reactions.recasts,
+          replyCount: reactions.replies,
           engagementScore,
           updatedAt: new Date(),
         },
         create: {
           castHash,
-          fid,
-          text: castData.text,
-          likes: reactions.likes,
-          recasts: reactions.recasts,
-          replies: reactions.replies,
-          engagementScore,
-          campaignId,
-          createdAt: new Date(cast.data?.timestamp || Date.now()),
-        },
-      });
-
-      // Update user engagement score if they exist
-      const user = await prisma.user.findFirst({
-        where: {
           farcasterFid: fid.toString(),
+          text: castData.text,
+          likeCount: reactions.likes,
+          recastCount: reactions.recasts,
+          replyCount: reactions.replies,
+          engagementScore,
+          userId: user.id,
+          campaignId: campaignId || '',
+          timestamp: new Date(cast.data?.timestamp || Date.now()),
         },
       });
 
-      if (user) {
-        await prisma.user.update({
+      // Update user engagement score
+      await prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          engagementScore: {
+            increment: engagementScore,
+          },
+        },
+      });
+
+      // Update campaign participation if applicable
+      if (campaignId) {
+        await prisma.campaignParticipant.updateMany({
           where: {
-            id: user.id,
+            userId: user.id,
+            campaignId,
           },
           data: {
             engagementScore: {
@@ -187,21 +207,6 @@ export class FarcasterHubClient {
             },
           },
         });
-
-        // Update campaign participation if applicable
-        if (campaignId) {
-          await prisma.campaignParticipant.updateMany({
-            where: {
-              userId: user.id,
-              campaignId,
-            },
-            data: {
-              engagementScore: {
-                increment: engagementScore,
-              },
-            },
-          });
-        }
       }
 
       return castEngagement;

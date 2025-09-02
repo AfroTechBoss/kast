@@ -90,12 +90,12 @@ export async function GET(req: NextRequest) {
         farcasterFid: fid,
       },
       include: {
-        campaigns: {
+        participations: {
           include: {
             campaign: {
               select: {
                 id: true,
-                name: true,
+                title: true,
                 status: true,
               },
             },

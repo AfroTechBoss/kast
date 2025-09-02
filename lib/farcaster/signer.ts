@@ -111,7 +111,7 @@ export class FarcasterSigner {
           verifications: farcasterUser.verifications,
           followerCount: hubProfile.followerCount,
           followingCount: hubProfile.followingCount,
-          lastLoginAt: new Date(),
+          lastActiveAt: new Date(),
           updatedAt: new Date(),
         },
         create: {
@@ -127,7 +127,7 @@ export class FarcasterSigner {
           followingCount: hubProfile.followingCount,
           engagementScore: 0,
           totalRewards: 0,
-          lastLoginAt: new Date(),
+          lastActiveAt: new Date(),
         },
       });
 
@@ -135,8 +135,7 @@ export class FarcasterSigner {
       const session = await prisma.userSession.create({
         data: {
           userId: user.id,
-          farcasterFid: farcasterUser.fid.toString(),
-          sessionToken: this.generateSessionToken(),
+          token: this.generateSessionToken(),
           expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
         },
       });
@@ -155,7 +154,7 @@ export class FarcasterSigner {
           followingCount: user.followingCount,
         },
         session: {
-          token: session.sessionToken,
+          token: session.token,
           expiresAt: session.expiresAt,
         },
       };
@@ -172,7 +171,7 @@ export class FarcasterSigner {
     try {
       const session = await prisma.userSession.findFirst({
         where: {
-          sessionToken,
+          token: sessionToken,
           expiresAt: {
             gt: new Date(),
           },
@@ -208,7 +207,7 @@ export class FarcasterSigner {
           id: session.id,
         },
         data: {
-          lastActivityAt: new Date(),
+          lastUsedAt: new Date(),
         },
       });
 
@@ -226,7 +225,7 @@ export class FarcasterSigner {
     try {
       await prisma.userSession.delete({
         where: {
-          sessionToken,
+          token: sessionToken,
         },
       });
       return true;
@@ -258,12 +257,12 @@ export class FarcasterSigner {
           farcasterFid: fid.toString(),
         },
         include: {
-          campaigns: {
+          participations: {
             include: {
               campaign: {
                 select: {
                   id: true,
-                  name: true,
+                  title: true,
                   status: true,
                 },
               },

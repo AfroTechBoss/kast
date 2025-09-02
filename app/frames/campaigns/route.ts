@@ -29,10 +29,9 @@ export async function POST(req: NextRequest): Promise<Response> {
     },
     select: {
       id: true,
-      name: true,
+      title: true,
       description: true,
-      totalRewards: true,
-      participantCount: true,
+      totalRewardPool: true,
     },
   });
 
@@ -120,10 +119,9 @@ export async function GET(): Promise<Response> {
     },
     select: {
       id: true,
-      name: true,
+      title: true,
       description: true,
-      totalRewards: true,
-      participantCount: true,
+      totalRewardPool: true,
     },
   });
 

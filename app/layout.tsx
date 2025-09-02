@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import '../styles/globals.css'
 import { Providers } from './providers'
 
-const inter = Inter({ subsets: ['latin'] })
+// Use system fonts as fallback to avoid network issues during build
+const fontClass = 'font-sans'
 
 export const metadata: Metadata = {
   title: 'KAST - Farcaster Reward Campaigns',
@@ -48,7 +48,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} bg-background text-foreground antialiased`}>
+      <body className={`${fontClass} bg-background text-foreground antialiased`}>
         <Providers>
           <div className="min-h-screen bg-black">
             {children}
