@@ -1,0 +1,33 @@
+{
+  "name": "Engagement King",
+  "description": "Achieved 1000+ total engagement - The ultimate social influence achievement",
+  "image": "https://rose-recent-coyote-234.mypinata.cloud/ipfs/bafybeig6fuflzeitberaph6e47qhydtrq7uge63e3tks53pcw5ige3a5la/3.png",
+  "external_url": "https://getkast.xyz",
+  "attributes": [
+    {
+      "trait_type": "Badge Type",
+      "value": "Platform"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Legendary"
+    },
+    {
+      "trait_type": "Category",
+      "value": "Social Achievement"
+    },
+    {
+      "trait_type": "Max Supply",
+      "value": "100"
+    },
+    {
+      "trait_type": "Threshold",
+      "value": "1000+ Engagement"
+    }
+  ],
+  "properties": {
+    "rarity_rank": 4,
+    "badge_id": 2,
+    "campaign_id": 0
+  }
+}

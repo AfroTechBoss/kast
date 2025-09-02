@@ -1,0 +1,33 @@
+{
+  "name": "First Campaign",
+  "description": "Participated in your first campaign - Welcome to the KAST community!",
+  "image": "https://rose-recent-coyote-234.mypinata.cloud/ipfs/bafybeig6fuflzeitberaph6e47qhydtrq7uge63e3tks53pcw5ige3a5la/4.png",
+  "external_url": "https://getkast.xyz",
+  "attributes": [
+    {
+      "trait_type": "Badge Type",
+      "value": "Platform"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Category",
+      "value": "Onboarding"
+    },
+    {
+      "trait_type": "Max Supply",
+      "value": "Unlimited"
+    },
+    {
+      "trait_type": "Achievement Type",
+      "value": "First Time"
+    }
+  ],
+  "properties": {
+    "rarity_rank": 1,
+    "badge_id": 3,
+    "campaign_id": 0
+  }
+}

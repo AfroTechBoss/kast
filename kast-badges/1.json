@@ -1,0 +1,33 @@
+{
+  "name": "Early Adopter",
+  "description": "Joined KAST in the first week - A rare achievement for the platform pioneers",
+  "image": "https://rose-recent-coyote-234.mypinata.cloud/ipfs/bafybeig6fuflzeitberaph6e47qhydtrq7uge63e3tks53pcw5ige3a5la/1.png",
+  "external_url": "https://getkast.xyz",
+  "attributes": [
+    {
+      "trait_type": "Badge Type",
+      "value": "Platform"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Category",
+      "value": "Milestone"
+    },
+    {
+      "trait_type": "Max Supply",
+      "value": "1000"
+    },
+    {
+      "trait_type": "Achievement Date",
+      "value": "Launch Week"
+    }
+  ],
+  "properties": {
+    "rarity_rank": 3,
+    "badge_id": 0,
+    "campaign_id": 0
+  }
+}

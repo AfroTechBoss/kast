@@ -1,0 +1,33 @@
+{
+  "name": "Meme Master",
+  "description": "Achieved viral status with exceptional meme content - Master of digital culture",
+  "image": "https://rose-recent-coyote-234.mypinata.cloud/ipfs/bafybeig6fuflzeitberaph6e47qhydtrq7uge63e3tks53pcw5ige3a5la/2.png",
+  "external_url": "https://getkast.xyz",
+  "attributes": [
+    {
+      "trait_type": "Badge Type",
+      "value": "Platform"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Category",
+      "value": "Content Creation"
+    },
+    {
+      "trait_type": "Max Supply",
+      "value": "5000"
+    },
+    {
+      "trait_type": "Skill",
+      "value": "Viral Content"
+    }
+  ],
+  "properties": {
+    "rarity_rank": 2,
+    "badge_id": 1,
+    "campaign_id": 0
+  }
+}
