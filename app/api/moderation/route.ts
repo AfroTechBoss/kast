@@ -1,39 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { contentModerator } from '@/lib/moderation/moderator';
-import { farcasterSigner } from '@/lib/farcaster/signer';
+import { getAuthenticatedUser } from '@/lib/auth/middleware';
 import { PrismaClient } from '@prisma/client';
-import { AuthenticatedUser } from '@/lib/auth/middleware';
 
 const prisma = new PrismaClient();
 
-// Helper function to authenticate user
-async function authenticateUser(req: NextRequest, required: boolean = true): Promise<AuthenticatedUser | null> {
-  try {
-    const sessionToken = 
-      req.cookies.get('session_token')?.value ||
-      req.headers.get('Authorization')?.replace('Bearer ', '');
 
-    if (!sessionToken) {
-      if (required) {
-        throw new Error('Authentication required');
-      }
-      return null;
-    }
-
-    const user = await farcasterSigner.verifySession(sessionToken);
-    
-    if (!user && required) {
-      throw new Error('Invalid or expired session');
-    }
-
-    return user;
-  } catch (error) {
-    if (required) {
-      throw error;
-    }
-    return null;
-  }
-}
 
 // Get moderation statistics and rules
 export async function GET(req: NextRequest) {
@@ -107,14 +79,15 @@ export async function GET(req: NextRequest) {
 
 // Moderate content or user
 export async function POST(req: NextRequest) {
+  const user = await getAuthenticatedUser(req);
+  if (!user) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
   try {
-    const user = await authenticateUser(req, true);
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
 
     const { action, targetType, targetId, castData, userId } = await req.json();
 
@@ -179,15 +152,15 @@ export async function POST(req: NextRequest) {
 
 // Execute moderation action
 export async function PUT(req: NextRequest) {
-  try {
-    const user = await authenticateUser(req, true);
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+  const user = await getAuthenticatedUser(req);
+  if (!user) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
 
+  try {
     const { actionType, targetType, targetId, reason, severity, expiresAt } = await req.json();
 
     if (!actionType || !targetType || !targetId) {
@@ -266,14 +239,15 @@ export async function PUT(req: NextRequest) {
 
 // Delete or reverse moderation action
 export async function DELETE(req: NextRequest) {
+  const user = await getAuthenticatedUser(req);
+  if (!user) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
   try {
-    const user = await authenticateUser(req, true);
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
 
     const { searchParams } = new URL(req.url);
     const actionId = searchParams.get('actionId');
