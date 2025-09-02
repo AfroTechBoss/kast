@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { Header } from '@/components/Header'
 import { BottomNav } from '@/components/BottomNav'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
@@ -123,7 +123,7 @@ function getTrendIcon(trend: LeaderboardEntry['trend']) {
   }
 }
 
-export default function LeaderboardPage() {
+function LeaderboardContent() {
   const [loading, setLoading] = useState(true)
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [selectedPeriod, setSelectedPeriod] = useState<'all' | 'week' | 'month'>('all')
@@ -293,5 +293,21 @@ export default function LeaderboardPage() {
 
       <BottomNav activeTab="leaderboard" />
     </div>
+  )
+}
+
+export default function LeaderboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black text-white">
+        <Header title="Leaderboard" />
+        <main className="container-mobile section-padding pb-24">
+          <LoadingSpinner size="lg" text="Loading leaderboard..." className="py-20" />
+        </main>
+        <BottomNav activeTab="leaderboard" />
+      </div>
+    }>
+      <LeaderboardContent />
+    </Suspense>
   )
 }
