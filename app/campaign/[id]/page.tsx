@@ -1,13 +1,17 @@
-import { Suspense } from 'react'
+'use client'
+
+import { Suspense, useState, useEffect } from 'react'
 import { notFound } from 'next/navigation'
 import { Header } from '@/components/Header'
 import { BottomNav } from '@/components/BottomNav'
 import { Button } from '@/components/Button'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
-import { getCampaign } from '@/services/campaigns'
-import { Clock, Users, Trophy, CheckCircle, ExternalLink, Share2 } from 'lucide-react'
+import { getCampaign, joinCampaign } from '@/services/campaigns'
+import { Clock, Users, Trophy, CheckCircle, ExternalLink, Share2, Wallet } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useAccount } from 'wagmi'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
 
 interface CampaignDetailPageProps {
   params: {
@@ -42,8 +46,56 @@ function CountdownTimer({ endDate }: { endDate: Date }) {
   )
 }
 
-async function CampaignContent({ id }: { id: string }) {
-  const campaign = await getCampaign(id)
+function CampaignContent({ id }: { id: string }) {
+  const [campaign, setCampaign] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [joining, setJoining] = useState(false)
+  const [hasJoined, setHasJoined] = useState(false)
+  const { address, isConnected } = useAccount()
+
+  useEffect(() => {
+    const loadCampaign = async () => {
+      try {
+        const campaignData = await getCampaign(id)
+        if (!campaignData) {
+          notFound()
+        }
+        setCampaign(campaignData)
+        // Check if user has already joined (mock check)
+        setHasJoined(false)
+      } catch (error) {
+        console.error('Error loading campaign:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadCampaign()
+  }, [id])
+
+  const handleJoinCampaign = async () => {
+    if (!isConnected || !address) return
+
+    setJoining(true)
+    try {
+      const success = await joinCampaign(id, address)
+      if (success) {
+        setHasJoined(true)
+        // Update campaign participant count
+        setCampaign((prev: any) => ({
+          ...prev,
+          participants: prev.participants + 1
+        }))
+      }
+    } catch (error) {
+      console.error('Error joining campaign:', error)
+    } finally {
+      setJoining(false)
+    }
+  }
+
+  if (loading) {
+    return <CampaignLoading />
+  }
   
   if (!campaign) {
     notFound()
@@ -122,7 +174,7 @@ async function CampaignContent({ id }: { id: string }) {
           Campaign Tasks
         </h2>
         <div className="space-y-3">
-          {campaign.tasks.map((task, index) => (
+          {campaign.tasks.map((task: string, index: number) => (
             <div key={index} className="flex items-start gap-3">
               <div className="w-6 h-6 bg-primary-purple/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                 <CheckCircle className="w-4 h-4 text-primary-purple" />
@@ -139,7 +191,7 @@ async function CampaignContent({ id }: { id: string }) {
           Campaign Rules
         </h2>
         <div className="space-y-2">
-          {campaign.rules.map((rule, index) => (
+          {campaign.rules.map((rule: string, index: number) => (
             <div key={index} className="flex items-start gap-3">
               <div className="w-2 h-2 bg-primary-purple rounded-full flex-shrink-0 mt-2"></div>
               <span className="text-sm text-gray-600">{rule}</span>
@@ -182,12 +234,59 @@ async function CampaignContent({ id }: { id: string }) {
 
       {/* Join Campaign Button */}
       <div className="card p-6">
-        <Button fullWidth size="lg" className="mb-3">
-          Join Campaign
-        </Button>
-        <p className="text-xs text-gray-500 text-center">
-          Connect your wallet to participate in this campaign
-        </p>
+        {hasJoined ? (
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-3 text-green-600">
+              <CheckCircle className="w-5 h-5" />
+              <span className="font-medium">You've joined this campaign!</span>
+            </div>
+            <p className="text-xs text-gray-500">
+              Start creating content to earn points and climb the leaderboard
+            </p>
+          </div>
+        ) : !isConnected ? (
+          <div className="text-center">
+            <div className="mb-3">
+              <ConnectButton.Custom>
+                {({ openConnectModal }) => (
+                  <Button 
+                    fullWidth 
+                    size="lg" 
+                    onClick={openConnectModal}
+                  >
+                    <Wallet className="w-4 h-4 mr-2" />
+                    Connect Wallet to Join
+                  </Button>
+                )}
+              </ConnectButton.Custom>
+            </div>
+            <p className="text-xs text-gray-500">
+              Connect your wallet to participate in this campaign
+            </p>
+          </div>
+        ) : (
+          <>
+            <Button 
+              fullWidth 
+              size="lg" 
+              className="mb-3" 
+              onClick={handleJoinCampaign}
+              disabled={joining}
+            >
+              {joining ? (
+                <>
+                  <LoadingSpinner className="w-4 h-4 mr-2" />
+                  Joining...
+                </>
+              ) : (
+                'Join Campaign'
+              )}
+            </Button>
+            <p className="text-xs text-gray-500 text-center">
+              Click to join and start earning points
+            </p>
+          </>
+        )}
       </div>
     </div>
   )
