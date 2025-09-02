@@ -6,7 +6,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // Get moderation statistics and rules
-export const GET = withAuth(async (req) => {
+async function handleGET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const action = searchParams.get('action');
@@ -73,10 +73,12 @@ export const GET = withAuth(async (req) => {
       { status: 500 }
     );
   }
-}, { required: false });
+}
+
+export const GET = withAuth(handleGET, { required: false });
 
 // Moderate content or user
-export const POST = withAuth(async (req) => {
+async function handlePOST(req: NextRequest) {
   try {
     const { action, targetType, targetId, castData, userId } = await req.json();
 
@@ -137,10 +139,12 @@ export const POST = withAuth(async (req) => {
       { status: 500 }
     );
   }
-});
+}
+
+export const POST = withAuth(handlePOST);
 
 // Execute moderation action
-export const PUT = withAuth(async (req) => {
+async function handlePUT(req: NextRequest) {
   try {
     const { actionType, targetType, targetId, reason, severity, expiresAt } = await req.json();
     const user = req.user;
@@ -217,10 +221,12 @@ export const PUT = withAuth(async (req) => {
       { status: 500 }
     );
   }
-});
+}
+
+export const PUT = withAuth(handlePUT);
 
 // Delete or reverse moderation action
-export const DELETE = withAuth(async (req) => {
+async function handleDELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const actionId = searchParams.get('actionId');
@@ -279,4 +285,6 @@ export const DELETE = withAuth(async (req) => {
       { status: 500 }
     );
   }
-});
+}
+
+export const DELETE = withAuth(handleDELETE);
