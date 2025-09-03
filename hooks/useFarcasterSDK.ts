@@ -69,9 +69,9 @@ export function useFarcasterSDK() {
       }
     },
 
-    openMiniApp: (miniAppId: string) => {
+    openMiniApp: (url: string) => {
       if (isInMiniApp) {
-        FarcasterSDK.openMiniApp(miniAppId);
+        FarcasterSDK.openMiniApp({ url });
       } else {
         console.warn('openMiniApp can only be called within a Farcaster mini app');
       }

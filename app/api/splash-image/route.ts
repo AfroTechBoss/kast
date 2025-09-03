@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const customImage = searchParams.get('customImage');
 
     // Get splash configuration based on context
-    let config = getSplashImageConfig(request, campaignId);
+    let config = getSplashImageConfig(request, campaignId || undefined);
 
     // Override with custom image if provided
     if (customImage) {

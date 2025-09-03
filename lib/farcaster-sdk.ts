@@ -1,4 +1,4 @@
-import { sdk } from '@farcaster/frame-sdk';
+import { sdk } from '@farcaster/miniapp-sdk';
 
 // Farcaster SDK Actions Utility
 export class FarcasterSDK {
@@ -29,7 +29,7 @@ export class FarcasterSDK {
    */
   static composeCast(options?: {
     text?: string;
-    embeds?: string[];
+    embeds?: [] | [string] | [string, string];
     parentCastId?: {
       fid: number;
       hash: string;
@@ -48,17 +48,17 @@ export class FarcasterSDK {
 
   /**
    * Opens another mini app
-   * @param miniAppId - The ID of the mini app to open
+   * @param options - Mini app options
    */
-  static openMiniApp(miniAppId: string) {
-    sdk.actions.openMiniApp(miniAppId);
+  static openMiniApp(options: { url: string }) {
+    sdk.actions.openMiniApp(options);
   }
 
   /**
    * Prompts the user to sign in with Farcaster
    */
-  static signIn() {
-    sdk.actions.signIn();
+  static signIn(options: { nonce: string; requestId: string } = { nonce: '', requestId: '' }) {
+    sdk.actions.signIn(options);
   }
 
   /**
@@ -66,7 +66,7 @@ export class FarcasterSDK {
    * @param fid - The Farcaster ID of the profile to view
    */
   static viewProfile(fid: number) {
-    sdk.actions.viewProfile(fid);
+    sdk.actions.viewProfile({ fid });
   }
 
   /**
@@ -97,7 +97,7 @@ export const {
 // Types for better TypeScript support
 export interface CastComposition {
   text?: string;
-  embeds?: string[];
+  embeds?: [] | [string] | [string, string];
   parentCastId?: {
     fid: number;
     hash: string;
