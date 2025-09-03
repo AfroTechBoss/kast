@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Menu, X, Zap } from 'lucide-react'
+import { FarcasterAuthButton } from './farcaster-auth-button'
 
 interface HeaderProps {
   showMenu?: boolean
@@ -38,26 +38,8 @@ export function Header({ showMenu = true, title }: HeaderProps) {
 
           {/* Right Side */}
           <div className="flex items-center gap-3">
-            {/* Connect Button */}
-            <div className="hidden sm:block">
-              <ConnectButton
-                chainStatus="none"
-                showBalance={false}
-                accountStatus={{
-                  smallScreen: 'avatar',
-                  largeScreen: 'full',
-                }}
-              />
-            </div>
-
-            {/* Mobile Connect Button */}
-            <div className="sm:hidden">
-              <ConnectButton
-                chainStatus="none"
-                showBalance={false}
-                accountStatus="avatar"
-              />
-            </div>
+            {/* Farcaster Auth Button */}
+            <FarcasterAuthButton />
 
             {/* Menu Button */}
             {showMenu && (
@@ -110,11 +92,7 @@ export function Header({ showMenu = true, title }: HeaderProps) {
               </a>
               <div className="border-t border-primary-purple/20 pt-3 mt-3">
                 <div className="px-4">
-                  <ConnectButton
-                    chainStatus="none"
-                    showBalance={true}
-                    accountStatus="full"
-                  />
+                  <FarcasterAuthButton />
                 </div>
               </div>
             </nav>
