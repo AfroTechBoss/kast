@@ -63,18 +63,27 @@ export function getFrameHtmlResponse({
   image,
   postUrl,
   refresh,
-  input
+  input,
+  splashImageUrl,
+  splashBackgroundColor
 }: {
   buttons?: Array<{ label: string; action?: string; target?: string }>;
   image: string | { src: string; aspectRatio?: string };
   postUrl?: string;
   refresh?: boolean;
   input?: { text: string };
+  splashImageUrl?: string;
+  splashBackgroundColor?: string;
 }): string {
   const imageUrl = typeof image === 'string' ? image : image.src;
   const buttonTags = buttons?.map((button, index) => 
     `<meta name="fc:frame:button:${index + 1}" content="${button.label}" />`
   ).join('\n') || '';
+
+  const splashTags = splashImageUrl || splashBackgroundColor ? `
+        ${splashImageUrl ? `<meta property="fc:frame:splash:image_url" content="${splashImageUrl}" />` : ''}
+        ${splashBackgroundColor ? `<meta property="fc:frame:splash:background_color" content="${splashBackgroundColor}" />` : ''}
+  ` : '';
 
   const html = `
     <!DOCTYPE html>
@@ -86,6 +95,7 @@ export function getFrameHtmlResponse({
         ${input ? `<meta property="fc:frame:input:text" content="${input.text}" />` : ''}
         ${buttonTags}
         ${refresh ? '<meta property="fc:frame:refresh_period" content="0" />' : ''}
+        ${splashTags}
       </head>
       <body>
         <p>Farcaster Frame</p>

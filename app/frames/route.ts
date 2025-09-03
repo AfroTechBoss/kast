@@ -62,6 +62,8 @@ export async function GET(): Promise<Response> {
       aspectRatio: '1.91:1',
     },
     postUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/frames`,
+    splashImageUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/splash-image?type=main`,
+    splashBackgroundColor: '#ffffff',
   });
 
   return new NextResponse(html, {

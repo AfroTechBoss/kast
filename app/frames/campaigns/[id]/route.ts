@@ -281,6 +281,8 @@ export async function GET(
       aspectRatio: '1.91:1',
     },
     postUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/frames/campaigns/${campaign.id}`,
+    splashImageUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/splash-image?type=campaign&campaignId=${campaign.id}`,
+    splashBackgroundColor: '#f0f9ff',
   });
 
   return new NextResponse(html, {

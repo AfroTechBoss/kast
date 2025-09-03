@@ -25,5 +25,7 @@
   "dir": "ltr",
   "orientation": "portrait-primary",
   "scope": "/",
-  "id": "kast-miniapp"
+  "id": "kast-miniapp",
+  "splashImageUrl": "https://github.com/AfroTechBoss/images/blob/main/kastpbw.png",
+  "splashBackgroundColor": "#ffffff"
 }
