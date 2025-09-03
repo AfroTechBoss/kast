@@ -35,8 +35,47 @@ export async function GET(req: NextRequest) {
 // Verify authentication and create session
 export async function POST(req: NextRequest) {
   try {
-    const { channelToken, walletAddress } = await req.json();
+    const { token, channelToken, walletAddress } = await req.json();
     const cookieStore = cookies();
+
+    // Handle Quick Auth token (new flow)
+    if (token) {
+      // Verify Quick Auth token with Farcaster
+      const farcasterUser = await farcasterSigner.verifyQuickAuthToken(token);
+      
+      if (!farcasterUser) {
+        return NextResponse.json(
+          { error: 'Invalid Quick Auth token' },
+          { status: 401 }
+        );
+      }
+
+      // Create or update user and session
+      const authResult = await farcasterSigner.authenticateUser(farcasterUser);
+
+      // Set session cookie
+      cookieStore.set('session_token', authResult.session.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        expires: authResult.session.expiresAt,
+      });
+
+      return NextResponse.json({
+        success: true,
+        fid: authResult.user.fid,
+        username: authResult.user.username,
+        displayName: authResult.user.displayName,
+        pfpUrl: authResult.user.pfpUrl,
+        custodyAddress: authResult.user.custodyAddress,
+        verifications: authResult.user.verifications,
+        session: {
+          expiresAt: authResult.session.expiresAt,
+        },
+      });
+    }
+
+    // Handle legacy channel token flow (for backward compatibility)
     const storedChannelToken = cookieStore.get('fc_channel_token')?.value;
 
     // Verify channel token matches

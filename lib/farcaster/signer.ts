@@ -89,6 +89,41 @@ export class FarcasterSigner {
   }
 
   /**
+   * Verify Quick Auth token and get user data
+   */
+  async verifyQuickAuthToken(token: string): Promise<FarcasterUser | null> {
+    try {
+      // For Quick Auth, we need to decode the token and extract user information
+      // The token should contain the user's FID and other profile data
+      const decoded = JSON.parse(atob(token.split('.')[1]));
+      
+      if (!decoded.fid) {
+        return null;
+      }
+
+      // Get fresh profile data from Farcaster Hub
+      const hubProfile = await hubClient.getUserProfile(decoded.fid);
+      
+      if (!hubProfile) {
+        return null;
+      }
+
+      return {
+        fid: decoded.fid,
+        username: hubProfile.username,
+        displayName: hubProfile.displayName,
+        bio: hubProfile.bio,
+        pfpUrl: hubProfile.pfpUrl,
+        custodyAddress: decoded.custodyAddress,
+        verifications: decoded.verifications || [],
+      };
+    } catch (error) {
+      console.error('Error verifying Quick Auth token:', error);
+      return null;
+    }
+  }
+
+  /**
    * Create or update user in database after successful authentication
    */
   async authenticateUser(farcasterUser: FarcasterUser, walletAddress?: string): Promise<any> {

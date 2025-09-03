@@ -5,7 +5,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Users table
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     farcaster_id BIGINT UNIQUE NOT NULL,
     username VARCHAR(255) NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE users (
 );
 
 -- Campaigns table
-CREATE TABLE campaigns (
+CREATE TABLE IF NOT EXISTS campaigns (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     creator_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
@@ -46,7 +46,7 @@ CREATE TABLE campaigns (
 );
 
 -- Campaign tasks table
-CREATE TABLE campaign_tasks (
+CREATE TABLE IF NOT EXISTS campaign_tasks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     campaign_id UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
     task_type VARCHAR(50) NOT NULL CHECK (task_type IN ('cast', 'meme', 'explainer', 'reply', 'recast', 'like')),
@@ -60,7 +60,7 @@ CREATE TABLE campaign_tasks (
 );
 
 -- Campaign participants table
-CREATE TABLE campaign_participants (
+CREATE TABLE IF NOT EXISTS campaign_participants (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     campaign_id UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -77,7 +77,7 @@ CREATE TABLE campaign_participants (
 );
 
 -- Submissions table (casts, memes, etc.)
-CREATE TABLE submissions (
+CREATE TABLE IF NOT EXISTS submissions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     campaign_id UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
     participant_id UUID NOT NULL REFERENCES campaign_participants(id) ON DELETE CASCADE,
@@ -106,7 +106,7 @@ CREATE TABLE submissions (
 );
 
 -- Engagement tracking table
-CREATE TABLE engagement_events (
+CREATE TABLE IF NOT EXISTS engagement_events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     submission_id UUID NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
@@ -118,7 +118,7 @@ CREATE TABLE engagement_events (
 );
 
 -- Scoring history table
-CREATE TABLE scoring_history (
+CREATE TABLE IF NOT EXISTS scoring_history (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     campaign_id UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
@@ -132,7 +132,7 @@ CREATE TABLE scoring_history (
 );
 
 -- Rewards table
-CREATE TABLE rewards (
+CREATE TABLE IF NOT EXISTS rewards (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     campaign_id UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -153,7 +153,7 @@ CREATE TABLE rewards (
 );
 
 -- Badges table (for tracking NFT badges)
-CREATE TABLE badges (
+CREATE TABLE IF NOT EXISTS badges (
     id SERIAL PRIMARY KEY,
     contract_badge_id INTEGER NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -170,7 +170,7 @@ CREATE TABLE badges (
 );
 
 -- User badges (earned badges)
-CREATE TABLE user_badges (
+CREATE TABLE IF NOT EXISTS user_badges (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     badge_id INTEGER NOT NULL REFERENCES badges(id) ON DELETE CASCADE,
@@ -182,7 +182,7 @@ CREATE TABLE user_badges (
 );
 
 -- Moderation table
-CREATE TABLE moderation_actions (
+CREATE TABLE IF NOT EXISTS moderation_actions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     submission_id UUID NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
     moderator_id UUID REFERENCES users(id) ON DELETE SET NULL,
@@ -193,7 +193,7 @@ CREATE TABLE moderation_actions (
 );
 
 -- Appeals table
-CREATE TABLE appeals (
+CREATE TABLE IF NOT EXISTS appeals (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     submission_id UUID NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -207,7 +207,7 @@ CREATE TABLE appeals (
 );
 
 -- Analytics events table
-CREATE TABLE analytics_events (
+CREATE TABLE IF NOT EXISTS analytics_events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     event_type VARCHAR(50) NOT NULL,
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
@@ -219,45 +219,45 @@ CREATE TABLE analytics_events (
 );
 
 -- Indexes for performance
-CREATE INDEX idx_users_farcaster_id ON users(farcaster_id);
-CREATE INDEX idx_users_wallet_address ON users(wallet_address);
-CREATE INDEX idx_users_created_at ON users(created_at);
+CREATE INDEX IF NOT EXISTS idx_users_farcaster_id ON users(farcaster_id);
+CREATE INDEX IF NOT EXISTS idx_users_wallet_address ON users(wallet_address);
+CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);
 
-CREATE INDEX idx_campaigns_creator_id ON campaigns(creator_id);
-CREATE INDEX idx_campaigns_status ON campaigns(status);
-CREATE INDEX idx_campaigns_start_time ON campaigns(start_time);
-CREATE INDEX idx_campaigns_end_time ON campaigns(end_time);
+CREATE INDEX IF NOT EXISTS idx_campaigns_creator_id ON campaigns(creator_id);
+CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);
+CREATE INDEX IF NOT EXISTS idx_campaigns_start_time ON campaigns(start_time);
+CREATE INDEX IF NOT EXISTS idx_campaigns_end_time ON campaigns(end_time);
 
-CREATE INDEX idx_campaign_participants_campaign_id ON campaign_participants(campaign_id);
-CREATE INDEX idx_campaign_participants_user_id ON campaign_participants(user_id);
-CREATE INDEX idx_campaign_participants_total_score ON campaign_participants(total_score DESC);
-CREATE INDEX idx_campaign_participants_current_rank ON campaign_participants(current_rank);
+CREATE INDEX IF NOT EXISTS idx_campaign_participants_campaign_id ON campaign_participants(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_campaign_participants_user_id ON campaign_participants(user_id);
+CREATE INDEX IF NOT EXISTS idx_campaign_participants_total_score ON campaign_participants(total_score DESC);
+CREATE INDEX IF NOT EXISTS idx_campaign_participants_current_rank ON campaign_participants(current_rank);
 
-CREATE INDEX idx_submissions_campaign_id ON submissions(campaign_id);
-CREATE INDEX idx_submissions_user_id ON submissions(user_id);
-CREATE INDEX idx_submissions_cast_hash ON submissions(cast_hash);
-CREATE INDEX idx_submissions_status ON submissions(status);
-CREATE INDEX idx_submissions_submitted_at ON submissions(submitted_at);
-CREATE INDEX idx_submissions_total_points ON submissions(total_points DESC);
+CREATE INDEX IF NOT EXISTS idx_submissions_campaign_id ON submissions(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_submissions_user_id ON submissions(user_id);
+CREATE INDEX IF NOT EXISTS idx_submissions_cast_hash ON submissions(cast_hash);
+CREATE INDEX IF NOT EXISTS idx_submissions_status ON submissions(status);
+CREATE INDEX IF NOT EXISTS idx_submissions_submitted_at ON submissions(submitted_at);
+CREATE INDEX IF NOT EXISTS idx_submissions_total_points ON submissions(total_points DESC);
 
-CREATE INDEX idx_engagement_events_submission_id ON engagement_events(submission_id);
-CREATE INDEX idx_engagement_events_user_id ON engagement_events(user_id);
-CREATE INDEX idx_engagement_events_event_type ON engagement_events(event_type);
-CREATE INDEX idx_engagement_events_created_at ON engagement_events(created_at);
+CREATE INDEX IF NOT EXISTS idx_engagement_events_submission_id ON engagement_events(submission_id);
+CREATE INDEX IF NOT EXISTS idx_engagement_events_user_id ON engagement_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_engagement_events_event_type ON engagement_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_engagement_events_created_at ON engagement_events(created_at);
 
-CREATE INDEX idx_scoring_history_user_id ON scoring_history(user_id);
-CREATE INDEX idx_scoring_history_campaign_id ON scoring_history(campaign_id);
-CREATE INDEX idx_scoring_history_created_at ON scoring_history(created_at);
+CREATE INDEX IF NOT EXISTS idx_scoring_history_user_id ON scoring_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_scoring_history_campaign_id ON scoring_history(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_scoring_history_created_at ON scoring_history(created_at);
 
-CREATE INDEX idx_rewards_campaign_id ON rewards(campaign_id);
-CREATE INDEX idx_rewards_user_id ON rewards(user_id);
-CREATE INDEX idx_rewards_status ON rewards(status);
+CREATE INDEX IF NOT EXISTS idx_rewards_campaign_id ON rewards(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_rewards_user_id ON rewards(user_id);
+CREATE INDEX IF NOT EXISTS idx_rewards_status ON rewards(status);
 
-CREATE INDEX idx_user_badges_user_id ON user_badges(user_id);
-CREATE INDEX idx_user_badges_badge_id ON user_badges(badge_id);
+CREATE INDEX IF NOT EXISTS idx_user_badges_user_id ON user_badges(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_badges_badge_id ON user_badges(badge_id);
 
-CREATE INDEX idx_analytics_events_event_type ON analytics_events(event_type);
-CREATE INDEX idx_analytics_events_created_at ON analytics_events(created_at);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_event_type ON analytics_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_created_at ON analytics_events(created_at);
 
 -- Functions for updating timestamps
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -269,19 +269,19 @@ END;
 $$ language 'plpgsql';
 
 -- Triggers for automatic timestamp updates
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
+CREATE OR REPLACE TRIGGER update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_campaigns_updated_at BEFORE UPDATE ON campaigns
+CREATE OR REPLACE TRIGGER update_campaigns_updated_at BEFORE UPDATE ON campaigns
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_submissions_updated_at BEFORE UPDATE ON submissions
+CREATE OR REPLACE TRIGGER update_submissions_updated_at BEFORE UPDATE ON submissions
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_rewards_updated_at BEFORE UPDATE ON rewards
+CREATE OR REPLACE TRIGGER update_rewards_updated_at BEFORE UPDATE ON rewards
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_appeals_updated_at BEFORE UPDATE ON appeals
+CREATE OR REPLACE TRIGGER update_appeals_updated_at BEFORE UPDATE ON appeals
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Function to calculate engagement score
@@ -329,18 +329,18 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Triggers for campaign stats
-CREATE TRIGGER update_campaign_participant_count 
+CREATE OR REPLACE TRIGGER update_campaign_participant_count 
     AFTER INSERT ON campaign_participants
     FOR EACH ROW EXECUTE FUNCTION update_campaign_stats();
 
-CREATE TRIGGER update_campaign_submission_count 
+CREATE OR REPLACE TRIGGER update_campaign_submission_count 
     AFTER INSERT ON submissions
     FOR EACH ROW EXECUTE FUNCTION update_campaign_stats();
 
 -- Views for common queries
 
 -- Campaign leaderboard view
-CREATE VIEW campaign_leaderboard AS
+CREATE OR REPLACE VIEW campaign_leaderboard AS
 SELECT 
     cp.campaign_id,
     cp.user_id,
@@ -357,7 +357,7 @@ WHERE cp.is_eligible = true
 ORDER BY cp.campaign_id, cp.current_rank;
 
 -- User statistics view
-CREATE VIEW user_statistics AS
+CREATE OR REPLACE VIEW user_statistics AS
 SELECT 
     u.id,
     u.username,
@@ -375,7 +375,7 @@ LEFT JOIN rewards r ON u.id = r.user_id AND r.status = 'claimed'
 GROUP BY u.id, u.username, u.display_name;
 
 -- Campaign analytics view
-CREATE VIEW campaign_analytics AS
+CREATE OR REPLACE VIEW campaign_analytics AS
 SELECT 
     c.id,
     c.title,
