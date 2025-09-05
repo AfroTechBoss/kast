@@ -2,7 +2,8 @@
 
 import { ReactNode } from 'react'
 import { FrameProvider } from '../components/FrameProvider'
-import { FarcasterAuthProvider } from '../lib/farcaster/auth-context'
+import { SIWNAuthProvider } from '../lib/siwn-auth-context'
+import { Toaster } from 'sonner'
 
 interface ProvidersProps {
   children: ReactNode
@@ -10,10 +11,11 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   return (
-    <FrameProvider>
-      <FarcasterAuthProvider>
+    <SIWNAuthProvider>
+      <FrameProvider>
         {children}
-      </FarcasterAuthProvider>
-    </FrameProvider>
+        <Toaster position="top-right" richColors />
+      </FrameProvider>
+    </SIWNAuthProvider>
   )
 }

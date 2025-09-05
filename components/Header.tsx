@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Menu, X, Zap } from 'lucide-react'
-import { FarcasterAuthButton } from './farcaster-auth-button'
+import { SIWNButtonCompact } from './siwnbutton'
 
 interface HeaderProps {
   showMenu?: boolean
@@ -38,9 +38,9 @@ export function Header({ showMenu = true, title }: HeaderProps) {
 
           {/* Right Side */}
           <div className="flex items-center gap-3">
-            {/* Farcaster Auth Button */}
-            <FarcasterAuthButton />
-
+            {/* SIWN Auth Button */}
+            <SIWNButtonCompact />
+            
             {/* Menu Button */}
             {showMenu && (
               <button
@@ -90,11 +90,13 @@ export function Header({ showMenu = true, title }: HeaderProps) {
               >
                 Project Console
               </a>
-              <div className="border-t border-primary-purple/20 pt-3 mt-3">
-                <div className="px-4">
-                  <FarcasterAuthButton />
-                </div>
-              </div>
+              <a
+                href="/faucet"
+                className="block px-4 py-2 text-white hover:text-primary-purple hover:bg-primary-purple/10 rounded-lg transition-all"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                🚰 Faucet
+              </a>
             </nav>
           </div>
         )}

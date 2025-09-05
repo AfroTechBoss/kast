@@ -12,11 +12,18 @@ async function main() {
   const network = await ethers.provider.getNetwork()
   console.log('Network:', network.name, 'Chain ID:', network.chainId)
 
+  // Deploy KAST Token contract
+  console.log('\n🪙 Deploying KAST Token contract...')
+  const KASTToken = await ethers.getContractFactory('KASTToken')
+  const initialOwner = process.env.INITIAL_OWNER || deployer.address
+  const kastToken = await KASTToken.deploy(initialOwner)
+  await kastToken.deployed()
+  console.log('✅ KAST Token deployed to:', kastToken.address)
+
   // Deploy KASTBadges contract
   console.log('\n📋 Deploying KASTBadges contract...')
   const KASTBadges = await ethers.getContractFactory('KASTBadges')
   const badgesBaseURI = process.env.BADGES_BASE_URI || 'https://getkast.xyz/api/badges/metadata/'
-  const initialOwner = process.env.INITIAL_OWNER || deployer.address
   const kastBadges = await KASTBadges.deploy(badgesBaseURI, initialOwner)
   await kastBadges.deployed()
   console.log('✅ KASTBadges deployed to:', kastBadges.address)
@@ -31,6 +38,7 @@ async function main() {
 
   // Wait for confirmations
   console.log('\n⏳ Waiting for confirmations...')
+  await kastToken.deployTransaction.wait(2)
   await kastBadges.deployTransaction.wait(2)
   await campaignEscrow.deployTransaction.wait(2)
 
@@ -55,13 +63,17 @@ async function main() {
     chainId: network.chainId,
     deployer: deployer.address,
     contracts: {
+      KASTToken: {
+        address: kastToken.address,
+        constructorArgs: [initialOwner],
+      },
       KASTBadges: {
         address: kastBadges.address,
-        constructorArgs: [badgesBaseURI],
+        constructorArgs: [badgesBaseURI, initialOwner],
       },
       CampaignEscrow: {
         address: campaignEscrow.address,
-        constructorArgs: [feeRecipient],
+        constructorArgs: [feeRecipient, initialOwner],
       },
     },
     deploymentTime: new Date().toISOString(),
@@ -86,6 +98,10 @@ async function main() {
     
     // Replace contract addresses in the config
     appConfig = appConfig.replace(
+      /KAST_TOKEN_ADDRESS: '[^']*'/,
+      `KAST_TOKEN_ADDRESS: '${kastToken.address}'`
+    )
+    appConfig = appConfig.replace(
       /CAMPAIGN_ESCROW_ADDRESS: '[^']*'/,
       `CAMPAIGN_ESCROW_ADDRESS: '${campaignEscrow.address}'`
     )
@@ -100,16 +116,25 @@ async function main() {
 
   console.log('\n🎉 Deployment completed successfully!')
   console.log('\n📋 Contract Addresses:')
+  console.log('KAST Token:', kastToken.address)
   console.log('KASTBadges:', kastBadges.address)
   console.log('CampaignEscrow:', campaignEscrow.address)
   console.log('\n🔗 Verification Commands:')
-  console.log(`npx hardhat verify --network ${network.name} ${kastBadges.address} "${badgesBaseURI}"`)
-  console.log(`npx hardhat verify --network ${network.name} ${campaignEscrow.address} "${feeRecipient}"`)
+  console.log(`npx hardhat verify --network ${network.name} ${kastToken.address} "${initialOwner}"`)
+  console.log(`npx hardhat verify --network ${network.name} ${kastBadges.address} "${badgesBaseURI}" "${initialOwner}"`)
+  console.log(`npx hardhat verify --network ${network.name} ${campaignEscrow.address} "${feeRecipient}" "${initialOwner}"`)
 
   // Test basic functionality
   console.log('\n🧪 Running basic functionality tests...')
   
   try {
+    // Test KAST token
+    console.log('Testing KAST token...')
+    const tokenName = await kastToken.name()
+    const tokenSymbol = await kastToken.symbol()
+    const totalSupply = await kastToken.totalSupply()
+    console.log(`✅ Token: ${tokenName} (${tokenSymbol}), Total Supply: ${ethers.utils.formatEther(totalSupply)} KAST`)
+    
     // Test badge creation
     console.log('Testing badge creation...')
     const badgeCount = await kastBadges.badgeCounter()

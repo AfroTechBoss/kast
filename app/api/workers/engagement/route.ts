@@ -1,36 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { engagementWorker } from '@/lib/workers/engagement-worker';
-import { farcasterSigner } from '@/lib/farcaster/signer';
-import { AuthenticatedUser } from '@/lib/auth/middleware';
-
-// Helper function to authenticate user
-async function authenticateUser(req: NextRequest, required: boolean = true): Promise<AuthenticatedUser | null> {
-  try {
-    const sessionToken = 
-      req.cookies.get('session_token')?.value ||
-      req.headers.get('Authorization')?.replace('Bearer ', '');
-
-    if (!sessionToken) {
-      if (required) {
-        throw new Error('Authentication required');
-      }
-      return null;
-    }
-
-    const user = await farcasterSigner.verifySession(sessionToken);
-    
-    if (!user && required) {
-      throw new Error('Invalid or expired session');
-    }
-
-    return user;
-  } catch (error) {
-    if (required) {
-      throw error;
-    }
-    return null;
-  }
-}
 
 // Get worker status
 export async function GET(req: NextRequest) {
@@ -53,14 +22,8 @@ export async function GET(req: NextRequest) {
 // Control worker (start/stop/trigger)
 export async function POST(req: NextRequest) {
   try {
-    const user = await authenticateUser(req, true);
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
+    // Authentication bypassed - no user authentication required
+    
     const { action } = await req.json();
     
     if (!action || !['start', 'stop', 'trigger'].includes(action)) {

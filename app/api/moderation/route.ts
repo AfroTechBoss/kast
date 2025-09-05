@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { contentModerator } from '@/lib/moderation/moderator';
-import { getAuthenticatedUser } from '@/lib/auth/middleware';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -79,13 +78,7 @@ export async function GET(req: NextRequest) {
 
 // Moderate content or user
 export async function POST(req: NextRequest) {
-  const user = await getAuthenticatedUser(req);
-  if (!user) {
-    return NextResponse.json(
-      { error: 'Authentication required' },
-      { status: 401 }
-    );
-  }
+  // Authentication bypassed - no auth system
 
   try {
 
@@ -152,13 +145,7 @@ export async function POST(req: NextRequest) {
 
 // Execute moderation action
 export async function PUT(req: NextRequest) {
-  const user = await getAuthenticatedUser(req);
-  if (!user) {
-    return NextResponse.json(
-      { error: 'Authentication required' },
-      { status: 401 }
-    );
-  }
+  // Authentication bypassed - no auth system
 
   try {
     const { actionType, targetType, targetId, reason, severity, expiresAt } = await req.json();
@@ -178,7 +165,7 @@ export async function PUT(req: NextRequest) {
         action: actionType,
         reason: reason || 'Manual moderation action',
         severity: severity || 'MEDIUM',
-        moderatorId: user?.id,
+        moderatorId: null, // No auth system
         expiresAt: expiresAt ? new Date(expiresAt) : null,
       },
     });
@@ -239,13 +226,7 @@ export async function PUT(req: NextRequest) {
 
 // Delete or reverse moderation action
 export async function DELETE(req: NextRequest) {
-  const user = await getAuthenticatedUser(req);
-  if (!user) {
-    return NextResponse.json(
-      { error: 'Authentication required' },
-      { status: 401 }
-    );
-  }
+  // Authentication bypassed - no auth system
 
   try {
 

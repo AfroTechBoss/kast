@@ -3,5 +3,6 @@
     "header": "eyJmaWQiOjgzNDc3OCwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweEUzQ0ZkMUUwNWQzNjA0N0U3MjdmOTFhNzA5NkQ2YUZGNzcwNjUxMjAifQ",
     "payload": "eyJkb21haW4iOiJnZXRrYXN0Lnh5eiJ9",
     "signature": "MHg1YjUxNDRjNjJjMWIzNTg0OGRmY2FkNWMxZDdlZjM5NjI3NDE0ZjdmNjJjNDc5YWExMzkyNTU5M2IyODY3OGMyNjBlYzY2MGJhZTMyYzY2Y2YxOTcwYmE3YTgyNDE3NzM1NmNmNjRkZDI0ZjM3MTQyMWQzZGY3NDM3OWY0MTYxNDFi"
-  }
+  },
+  "webhookUrl": "https://api.neynar.com/f/app/3304a256-d483-414b-be19-b317a7a45a3f/event"
 }

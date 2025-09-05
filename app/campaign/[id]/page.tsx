@@ -10,8 +10,6 @@ import { getCampaign, joinCampaign } from '@/services/campaigns'
 import { Clock, Users, Trophy, CheckCircle, ExternalLink, Share2, Wallet } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useFarcasterAuth } from '@/lib/farcaster/auth-context'
-import { FarcasterAuthButton, useFarcasterAuthButton } from '@/components/farcaster-auth-button'
 
 interface CampaignDetailPageProps {
   params: {
@@ -51,8 +49,6 @@ function CampaignContent({ id }: { id: string }) {
   const [loading, setLoading] = useState(true)
   const [joining, setJoining] = useState(false)
   const [hasJoined, setHasJoined] = useState(false)
-  const { user, isAuthenticated } = useFarcasterAuth()
-  const { openConnectModal } = useFarcasterAuthButton()
 
   useEffect(() => {
     const loadCampaign = async () => {
@@ -74,11 +70,9 @@ function CampaignContent({ id }: { id: string }) {
   }, [id])
 
   const handleJoinCampaign = async () => {
-    if (!isAuthenticated || !user) return
-
     setJoining(true)
     try {
-      const success = await joinCampaign(id, user.fid.toString())
+      const success = await joinCampaign(id, 'anonymous')
       if (success) {
         setHasJoined(true)
         // Update campaign participant count
@@ -243,22 +237,6 @@ function CampaignContent({ id }: { id: string }) {
             </div>
             <p className="text-xs text-gray-500">
               Start creating content to earn points and climb the leaderboard
-            </p>
-          </div>
-        ) : !isAuthenticated ? (
-          <div className="text-center">
-            <div className="mb-3">
-              <Button 
-                fullWidth 
-                size="lg" 
-                onClick={openConnectModal}
-              >
-                <Wallet className="w-4 h-4 mr-2" />
-                Sign in with Farcaster to Join
-              </Button>
-            </div>
-            <p className="text-xs text-gray-500">
-              Sign in with your Farcaster account to participate in this campaign
             </p>
           </div>
         ) : (

@@ -31,6 +31,7 @@ module.exports = {
     rpcUrl: process.env.BASE_RPC_URL || 'https://mainnet.base.org',
     chainId: 8453,
     contracts: {
+      token: process.env.KAST_TOKEN_ADDRESS,
       escrow: process.env.ESCROW_CONTRACT_ADDRESS,
       rewards: process.env.REWARDS_CONTRACT_ADDRESS,
       badges: process.env.BADGES_CONTRACT_ADDRESS,
