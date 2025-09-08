@@ -51,7 +51,14 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const campaignId = searchParams.get('campaignId');
 
-    let whereClause: any = {
+    interface WhereClause {
+      createdAt: {
+        gte: Date;
+      };
+      campaignId?: string;
+    }
+
+    const whereClause: WhereClause = {
       createdAt: {
         gte: new Date(Date.now() - hours * 60 * 60 * 1000),
       },

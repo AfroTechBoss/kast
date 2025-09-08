@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Header } from '@/components/Header'
 import { BottomNav } from '@/components/BottomNav'
-import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Button } from '@/components/Button'
 import { 
   User, 
@@ -21,7 +20,6 @@ import {
   Star
 } from 'lucide-react'
 import Link from 'next/link'
-import Image from 'next/image'
 
 interface UserProfile {
   id: string
@@ -173,7 +171,6 @@ function getRarityIcon(rarity: string) {
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'badges' | 'history'>('overview')
-  const [loading, setLoading] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const copyAddress = async () => {
@@ -247,7 +244,7 @@ export default function ProfilePage() {
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as 'overview' | 'badges' | 'history')}
               className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? 'bg-primary-purple text-white'

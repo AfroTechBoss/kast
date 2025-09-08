@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Extend global interface for TypeScript
-declare global {
-  var authSessions: Map<string, { user: any; timestamp: number }> | undefined
-}
-
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const nonce = searchParams.get('nonce')

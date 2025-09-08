@@ -2,15 +2,11 @@ import { FrameRequest, getFrameMessage, getFrameHtmlResponse } from '@/lib/frame
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest): Promise<Response> {
-  let accountAddress: string | undefined = '';
-  let text: string | undefined = '';
-
   const body: FrameRequest = await req.json();
-  const { isValid, message } = await getFrameMessage(body, { neynarApiKey: 'NEYNAR_ONCHAIN_KIT' });
+  const { isValid } = await getFrameMessage(body);
 
   if (isValid) {
-    accountAddress = message.interactor?.verified_accounts[0] || '';
-    text = message.input || '';
+    // Frame message is valid, proceed with response
   }
 
   const html = getFrameHtmlResponse({

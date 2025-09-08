@@ -127,7 +127,7 @@ class EngagementWorker {
   /**
    * Process a batch of participants
    */
-  private async processBatch(participants: any[]): Promise<void> {
+  private async processBatch(participants: { id: string; user: { id: string; farcasterFid: string | null }; campaign: { id: string; title?: string; description?: string; hashtags?: string[] } }[]): Promise<void> {
     const promises = participants.map(participant => 
       this.processParticipant(participant)
     );
@@ -138,7 +138,7 @@ class EngagementWorker {
   /**
    * Process individual participant engagement
    */
-  private async processParticipant(participant: any): Promise<void> {
+  private async processParticipant(participant: { id: string; user: { id: string; farcasterFid: string | null }; campaign: { id: string; title?: string; description?: string; hashtags?: string[] } }): Promise<void> {
     try {
       const { user, campaign } = participant;
       
@@ -165,7 +165,12 @@ class EngagementWorker {
           const isRelevant = this.isCastRelevantToCampaign(cast, campaign);
           
           if (isRelevant) {
-            const score = await hubClient.calculateEngagementScore(cast);
+            const score = hubClient.calculateEngagementScore({
+              likes: cast.reactions?.likes || 0,
+              recasts: cast.reactions?.recasts || 0,
+              replies: cast.reactions?.replies || 0,
+              followerCount: 100 // Default follower count, should be fetched from user profile
+            });
             totalEngagementScore += score;
             
             // Store cast data
@@ -204,9 +209,9 @@ class EngagementWorker {
   /**
    * Get casts with retry logic
    */
-  private async getCastsWithRetry(fid: number, retries = 0): Promise<any[]> {
+  private async getCastsWithRetry(fid: number, retries = 0): Promise<{ hash: string; text?: string; fid: number; timestamp: Date; reactions?: { likes?: number; recasts?: number; replies?: number } }[]> {
     try {
-      return await hubClient.getUserCasts(fid, undefined, 50);
+      return await hubClient.getUserCasts();
     } catch (error) {
       if (retries < this.config.maxRetries) {
         console.log(`Retrying getCasts for FID ${fid} (attempt ${retries + 1})`);
@@ -220,12 +225,12 @@ class EngagementWorker {
   /**
    * Check if cast is relevant to campaign
    */
-  private isCastRelevantToCampaign(cast: any, campaign: any): boolean {
+  private isCastRelevantToCampaign(cast: { text?: string }, campaign: { title?: string; description?: string; hashtags?: string[] }): boolean {
     const text = cast.text?.toLowerCase() || '';
     const campaignKeywords = [
       campaign.title?.toLowerCase(),
       campaign.description?.toLowerCase(),
-      ...((campaign.hashtags as string[]) || []).map(tag => tag.toLowerCase()),
+      ...(campaign.hashtags || []).map(tag => tag.toLowerCase()),
     ].filter(Boolean);
 
     // Check for campaign-related keywords
@@ -238,7 +243,7 @@ class EngagementWorker {
    * Store cast data in database
    */
   private async storeCastData(
-    cast: any,
+    cast: { hash: string; text?: string; fid: number; timestamp: Date; reactions?: { likes?: number; recasts?: number; replies?: number } },
     userId: string,
     campaignId: string,
     engagementScore: number
@@ -265,7 +270,7 @@ class EngagementWorker {
           likeCount: cast.reactions?.likes || 0,
           recastCount: cast.reactions?.recasts || 0,
           replyCount: cast.reactions?.replies || 0,
-          timestamp: new Date(cast.timestamp),
+          timestamp: cast.timestamp,
           createdAt: new Date(),
           updatedAt: new Date(),
         },

@@ -36,7 +36,7 @@ export interface FrameMessage {
   button?: number;
 }
 
-export async function getFrameMessage(body: any, options?: any): Promise<{ isValid: boolean; message: FrameMessage }> {
+export async function getFrameMessage(body: FrameRequest): Promise<{ isValid: boolean; message: FrameMessage }> {
   // Simplified frame message parsing
   const message: FrameMessage = {
     fid: body?.untrustedData?.fid || 0,

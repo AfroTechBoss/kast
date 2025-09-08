@@ -7,7 +7,7 @@ import { BottomNav } from '@/components/BottomNav'
 import { Button } from '@/components/Button'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { getCampaign, joinCampaign } from '@/services/campaigns'
-import { Clock, Users, Trophy, CheckCircle, ExternalLink, Share2, Wallet } from 'lucide-react'
+import { Clock, Users, Trophy, CheckCircle, Share2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -45,7 +45,20 @@ function CountdownTimer({ endDate }: { endDate: Date }) {
 }
 
 function CampaignContent({ id }: { id: string }) {
-  const [campaign, setCampaign] = useState<any>(null)
+  interface Campaign {
+    id: string;
+    title: string;
+    projectName: string;
+    projectLogo?: string;
+    description: string;
+    rewardPool: string;
+    endDate: Date;
+    participants: number;
+    tasks: string[];
+    rules: string[];
+  }
+
+  const [campaign, setCampaign] = useState<Campaign | null>(null)
   const [loading, setLoading] = useState(true)
   const [joining, setJoining] = useState(false)
   const [hasJoined, setHasJoined] = useState(false)
@@ -76,10 +89,10 @@ function CampaignContent({ id }: { id: string }) {
       if (success) {
         setHasJoined(true)
         // Update campaign participant count
-        setCampaign((prev: any) => ({
+        setCampaign((prev) => prev ? ({
           ...prev,
           participants: prev.participants + 1
-        }))
+        }) : null)
       }
     } catch (error) {
       console.error('Error joining campaign:', error)
@@ -233,7 +246,7 @@ function CampaignContent({ id }: { id: string }) {
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-3 text-green-600">
               <CheckCircle className="w-5 h-5" />
-              <span className="font-medium">You've joined this campaign!</span>
+              <span className="font-medium">You&apos;ve joined this campaign!</span>
             </div>
             <p className="text-xs text-gray-500">
               Start creating content to earn points and climb the leaderboard

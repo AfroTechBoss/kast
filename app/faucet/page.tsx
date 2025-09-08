@@ -5,8 +5,11 @@ import { Header } from '@/components/Header'
 import { BottomNav } from '@/components/BottomNav'
 import { Droplets, Clock, CheckCircle, AlertCircle, Wallet } from 'lucide-react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
-import { parseEther, formatEther } from 'viem'
+import { formatEther } from 'viem'
 import { toast } from 'sonner'
+
+// This page uses Web3 hooks and must be rendered dynamically
+export const dynamic = 'force-dynamic'
 
 const KAST_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_KAST_TOKEN_ADDRESS as `0x${string}`
 const CLAIM_AMOUNT = '100' // 100 KAST tokens

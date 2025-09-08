@@ -8,10 +8,10 @@ The Info-Fi Layer of Farcaster
 Copy the environment template and configure your variables:
 
 ```bash
-cp .env.local.example .env.local
+cp .env.local .env
 ```
 
-**Important**: Get a WalletConnect Project ID from [WalletConnect Cloud](https://cloud.walletconnect.com/) and add it to your `.env.local`:
+**Important**: Get a WalletConnect Project ID from [WalletConnect Cloud](https://cloud.walletconnect.com/) and add it to your `.env`:
 
 ```
 NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_actual_project_id_here

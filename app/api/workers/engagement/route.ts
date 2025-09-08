@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { engagementWorker } from '@/lib/workers/engagement-worker';
 
 // Get worker status
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const status = engagementWorker.getStatus();
     
@@ -57,10 +57,10 @@ export async function POST(req: NextRequest) {
       ...result,
       status: engagementWorker.getStatus(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error controlling worker:', error);
     return NextResponse.json(
-      { error: `Failed to control worker: ${error.message}` },
+      { error: `Failed to control worker: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     );
   }

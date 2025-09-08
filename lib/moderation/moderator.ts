@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import { hubClient } from '@/lib/farcaster/hub-client';
 
 interface ModerationRule {
   id: string;
@@ -8,7 +7,7 @@ interface ModerationRule {
   enabled: boolean;
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   action: 'WARNING' | 'HIDE_CONTENT' | 'SUSPEND_USER' | 'BAN_USER' | 'REMOVE_FROM_CAMPAIGN';
-  check: (content: any, user: any) => Promise<boolean>;
+  check: (content?: { text?: string; hash?: string; authorFid?: number; } | null, user?: { id: string; farcasterFid?: string | null; castEngagements?: Array<{ id: string; createdAt: Date; }>; moderationActions?: Array<{ id: string; createdAt: Date; }>; }) => Promise<boolean>;
 }
 
 interface ModerationResult {
@@ -100,7 +99,7 @@ class ContentModerator {
   /**
    * Moderate cast content
    */
-  async moderateCast(cast: any, userId: string): Promise<ModerationResult> {
+  async moderateCast(cast: { text?: string; hash?: string; authorFid?: number; }, userId: string): Promise<ModerationResult> {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
@@ -152,7 +151,7 @@ class ContentModerator {
       if (result.flagged) {
         await this.logModerationAction({
           targetType: 'CAST',
-          targetId: cast.hash,
+          targetId: cast.hash || 'unknown',
           action: result.action,
           reason: result.reason,
           severity: result.severity,
@@ -256,7 +255,8 @@ class ContentModerator {
   /**
    * Check for spam content
    */
-  private async checkSpamContent(cast: any, user: any): Promise<boolean> {
+  private async checkSpamContent(content?: { text?: string; hash?: string; authorFid?: number } | null): Promise<boolean> {
+    const cast = content;
     if (!cast) return false;
 
     const text = cast.text?.toLowerCase() || '';
@@ -300,7 +300,8 @@ class ContentModerator {
   /**
    * Check for scam content
    */
-  private async checkScamContent(cast: any, user: any): Promise<boolean> {
+  private async checkScamContent(content?: { text?: string; hash?: string; authorFid?: number } | null): Promise<boolean> {
+    const cast = content;
     if (!cast) return false;
 
     const text = cast.text?.toLowerCase() || '';
@@ -327,8 +328,8 @@ class ContentModerator {
   /**
    * Check profile verification status
    */
-  private async checkProfileVerification(cast: any, user: any): Promise<boolean> {
-    if (!user.farcasterFid) return true;
+  private async checkProfileVerification(content?: { text?: string; hash?: string; authorFid?: number } | null, user?: { id: string; farcasterFid?: string | null; castEngagements?: Array<{ id: string; engagementScore?: number; createdAt: Date }>; moderationActions?: Array<{ id: string; action?: string; createdAt: Date }>; verifications?: Array<{ address: string; protocol: string }>; createdAt?: Date }): Promise<boolean> {
+    if (!user || !user.farcasterFid) return true;
 
     // Check if user has verified addresses
     if (!user.verifications || user.verifications.length === 0) {
@@ -336,9 +337,11 @@ class ContentModerator {
     }
 
     // Check if profile is too new (less than 7 days)
-    const accountAge = Date.now() - new Date(user.createdAt).getTime();
-    if (accountAge < 7 * 24 * 60 * 60 * 1000) {
-      return true;
+    if (user.createdAt) {
+      const accountAge = Date.now() - new Date(user.createdAt).getTime();
+      if (accountAge < 7 * 24 * 60 * 60 * 1000) {
+        return true;
+      }
     }
 
     return false;
@@ -347,23 +350,32 @@ class ContentModerator {
   /**
    * Check for engagement manipulation
    */
-  private async checkEngagementManipulation(cast: any, user: any): Promise<boolean> {
+  private async checkEngagementManipulation(content?: { text?: string; hash?: string; authorFid?: number; engagementScore?: number } | null, user?: { id: string; farcasterFid?: string | null; castEngagements?: Array<{ id: string; engagementScore?: number; createdAt: Date }>; moderationActions?: Array<{ id: string; action?: string; createdAt: Date }>; createdAt?: Date }): Promise<boolean> {
+    const cast = content;
+    if (!user) return false;
     // Check for suspicious engagement patterns
     const recentCasts = user.castEngagements || [];
     
     if (recentCasts.length < 5) return false;
 
+    // Filter casts with valid engagement scores
+    const castsWithScores = recentCasts.filter((c): c is { id: string; engagementScore: number; createdAt: Date } => 
+      typeof c.engagementScore === 'number'
+    );
+    
+    if (castsWithScores.length === 0) return false;
+    
     // Calculate average engagement score
-    const avgScore = recentCasts.reduce((sum: number, cast: any) => sum + cast.engagementScore, 0) / recentCasts.length;
+    const avgScore = castsWithScores.reduce((sum: number, cast) => sum + cast.engagementScore, 0) / castsWithScores.length;
     
     // Flag if recent cast has unusually high engagement
-    if (cast && cast.engagementScore > avgScore * 5) {
+    if (cast && typeof cast.engagementScore === 'number' && cast.engagementScore > avgScore * 5) {
       return true;
     }
 
     // Check for rapid posting (more than 10 casts in last hour)
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    const recentCastsCount = recentCasts.filter((c: any) => new Date(c.createdAt) > oneHourAgo).length;
+    const recentCastsCount = recentCasts.filter((c) => new Date(c.createdAt) > oneHourAgo).length;
     
     if (recentCastsCount > 10) {
       return true;
@@ -375,7 +387,8 @@ class ContentModerator {
   /**
    * Check for malicious links
    */
-  private async checkMaliciousLinks(cast: any, user: any): Promise<boolean> {
+  private async checkMaliciousLinks(content?: { text?: string; hash?: string; authorFid?: number } | null): Promise<boolean> {
+    const cast = content;
     if (!cast) return false;
 
     const text = cast.text || '';
@@ -394,7 +407,7 @@ class ContentModerator {
           // Could implement URL expansion and further checking here
           return false; // For now, allow shortened URLs
         }
-      } catch (error) {
+      } catch {
         // Invalid URL format
         return true;
       }
@@ -406,11 +419,12 @@ class ContentModerator {
   /**
    * Check rate limiting
    */
-  private async checkRateLimit(cast: any, user: any): Promise<boolean> {
+  private async checkRateLimit(content?: { text?: string; hash?: string; authorFid?: number } | null, user?: { id: string; farcasterFid?: string | null; castEngagements?: Array<{ id: string; createdAt: Date }>; moderationActions?: Array<{ id: string; action?: string; createdAt: Date }>; createdAt?: Date }): Promise<boolean> {
+    if (!user) return false;
     const recentCasts = user.castEngagements || [];
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
     
-    const recentCastsCount = recentCasts.filter((c: any) => new Date(c.createdAt) > fiveMinutesAgo).length;
+    const recentCastsCount = recentCasts.filter((c: { createdAt: Date }) => new Date(c.createdAt) > fiveMinutesAgo).length;
     
     // Flag if more than 5 casts in 5 minutes
     return recentCastsCount > 5;
@@ -459,9 +473,9 @@ class ContentModerator {
         data: {
           targetType: action.targetType,
           targetId: action.targetId,
-          action: action.action as any,
+          action: action.action as 'WARNING' | 'HIDE_CONTENT' | 'SUSPEND_USER' | 'BAN_USER' | 'REMOVE_FROM_CAMPAIGN',
           reason: action.reason,
-          severity: action.severity as any,
+          severity: action.severity as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL',
           createdAt: new Date(),
         },
       });

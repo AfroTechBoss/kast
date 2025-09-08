@@ -4,9 +4,9 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { buttonIndex, fid, castId, inputText } = body;
+    const { buttonIndex, fid } = body;
 
-    console.log('Frame action received:', { buttonIndex, fid, castId, inputText });
+    console.log('Frame action received:', { buttonIndex, fid });
 
     // Handle different button actions
     switch (buttonIndex) {
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Handle GET requests (fallback)
-export async function GET(request: NextRequest) {
+export async function GET() {
   return NextResponse.json(
     { error: 'This endpoint only accepts POST requests' },
     { status: 405 }

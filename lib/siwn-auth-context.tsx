@@ -33,7 +33,7 @@ export function SIWNAuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
   const [authUrl, setAuthUrl] = useState<string | null>(null)
   const [isPolling, setIsPolling] = useState(false)
-  const [currentNonce, setCurrentNonce] = useState<string | null>(null)
+
 
   // Check for existing session on mount
   useEffect(() => {
@@ -53,7 +53,6 @@ export function SIWNAuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true)
       
       const nonce = generateNonce()
-      setCurrentNonce(nonce)
       
       // Create SIWN authentication URL using Neynar
       const clientId = process.env.NEXT_PUBLIC_NEYNAR_CLIENT_ID
@@ -121,7 +120,7 @@ export function SIWNAuthProvider({ children }: { children: ReactNode }) {
       // Start polling after a short delay
       setTimeout(pollForAuth, 2000)
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Sign in error:', error)
       toast.error('Failed to initiate sign in. Please try again.')
     } finally {

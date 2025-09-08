@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Extend global interface for TypeScript
-declare global {
-  var authSessions: Map<string, { user: any; timestamp: number }> | undefined
-}
-
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const code = searchParams.get('code')
@@ -29,7 +24,6 @@ export async function GET(request: NextRequest) {
       },
       body: JSON.stringify({
         client_id: process.env.NEXT_PUBLIC_NEYNAR_CLIENT_ID,
-        client_secret: process.env.NEYNAR_CLIENT_SECRET,
         code,
         grant_type: 'authorization_code',
         redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/neynar/callback`

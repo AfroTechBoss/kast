@@ -3,21 +3,18 @@
 import { useState } from 'react'
 import { Header } from '@/components/Header'
 import { BottomNav } from '@/components/BottomNav'
-import { Button } from '@/components/Button'
-import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { Button } from '@/components/ui/button'
 import { 
-  Plus, 
   Settings, 
   BarChart3, 
   Users, 
+  DollarSign, 
   TrendingUp, 
   Calendar, 
-  DollarSign,
-  Eye,
-  Edit,
-  Trash2,
+  Eye, 
+  Edit, 
   Download,
-  ExternalLink
+  Plus 
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -109,7 +106,6 @@ function getStatusColor(status: Campaign['status']) {
 
 export default function ConsolePage() {
   const [activeTab, setActiveTab] = useState<'campaigns' | 'analytics'>('campaigns')
-  const [loading, setLoading] = useState(false)
   const router = useRouter()
 
   const activeCampaigns = mockCampaigns.filter(c => c.status === 'active')
@@ -128,19 +124,15 @@ export default function ConsolePage() {
     router.push(`/console/edit/${campaignId}`)
   }
 
-  const handleEndCampaign = async (campaignId: string) => {
-    setLoading(true)
+  const handleEndCampaign = async () => {
     // Simulate ending campaign
     await new Promise(resolve => setTimeout(resolve, 2000))
-    setLoading(false)
     // In real app, update campaign status
   }
 
-  const handleExportAnalytics = async (format: 'csv' | 'pdf') => {
-    setLoading(true)
+  const handleExportAnalytics = async () => {
     // Simulate export
     await new Promise(resolve => setTimeout(resolve, 1500))
-    setLoading(false)
     // In real app, trigger download
   }
 
@@ -160,7 +152,7 @@ export default function ConsolePage() {
             </p>
           </div>
           <Button
-            variant="primary"
+            variant="default"
             size="sm"
             onClick={handleCreateCampaign}
             className="flex items-center gap-2"
@@ -260,9 +252,8 @@ export default function ConsolePage() {
                         </Button>
                         <Button
                           size="sm"
-                          variant="danger"
-                          onClick={() => handleEndCampaign(campaign.id)}
-                          loading={loading}
+                          variant="destructive"
+                          onClick={() => handleEndCampaign()}
                           className="flex items-center gap-1 ml-auto"
                         >
                           End Campaign
@@ -351,7 +342,7 @@ export default function ConsolePage() {
                 <p className="text-gray-500 text-sm mb-4">
                   Create your first campaign to start engaging with the community
                 </p>
-                <Button variant="primary" onClick={handleCreateCampaign}>
+                <Button variant="default" onClick={handleCreateCampaign}>
                   Create Campaign
                 </Button>
               </div>
@@ -431,8 +422,7 @@ export default function ConsolePage() {
               <div className="flex gap-3">
                 <Button
                   variant="secondary"
-                  onClick={() => handleExportAnalytics('csv')}
-                  loading={loading}
+                  onClick={() => handleExportAnalytics()}
                   className="flex items-center gap-2"
                 >
                   <Download className="w-4 h-4" />
@@ -440,8 +430,7 @@ export default function ConsolePage() {
                 </Button>
                 <Button
                   variant="secondary"
-                  onClick={() => handleExportAnalytics('pdf')}
-                  loading={loading}
+                  onClick={() => handleExportAnalytics()}
                   className="flex items-center gap-2"
                 >
                   <Download className="w-4 h-4" />

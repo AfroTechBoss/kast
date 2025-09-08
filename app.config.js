@@ -1,5 +1,5 @@
 // Load environment variables
-require('dotenv').config({ path: '.env.local' });
+require('dotenv').config({ path: '.env' });
 
 // KAST App Configuration
 module.exports = {

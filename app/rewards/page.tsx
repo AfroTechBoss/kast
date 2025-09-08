@@ -4,8 +4,7 @@ import { useState } from 'react'
 import { Header } from '@/components/Header'
 import { BottomNav } from '@/components/BottomNav'
 import { Button } from '@/components/Button'
-import { Gift, CheckCircle, Clock, Trophy, Star, Download, ExternalLink } from 'lucide-react'
-import Image from 'next/image'
+import { Gift, CheckCircle, Clock, Trophy, Star, ExternalLink } from 'lucide-react'
 
 interface Reward {
   id: string
@@ -92,31 +91,7 @@ const mockBadges: Badge[] = [
   },
 ]
 
-function getStatusColor(status: Reward['status']) {
-  switch (status) {
-    case 'claimable':
-      return 'text-green-400'
-    case 'pending':
-      return 'text-yellow-400'
-    case 'claimed':
-      return 'text-gray-400'
-    default:
-      return 'text-gray-400'
-  }
-}
 
-function getStatusIcon(status: Reward['status']) {
-  switch (status) {
-    case 'claimable':
-      return <Gift className="w-4 h-4 text-green-400" />
-    case 'pending':
-      return <Clock className="w-4 h-4 text-yellow-400" />
-    case 'claimed':
-      return <CheckCircle className="w-4 h-4 text-gray-400" />
-    default:
-      return <Clock className="w-4 h-4 text-gray-400" />
-  }
-}
 
 function getRarityColor(rarity: Badge['rarity']) {
   switch (rarity) {

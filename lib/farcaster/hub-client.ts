@@ -12,6 +12,18 @@ interface FarcasterProfile {
   followingCount?: number;
 }
 
+interface CastData {
+  hash: string;
+  castHash: string;
+  fid: number;
+  text: string;
+  timestamp: Date;
+  likes: number;
+  recasts: number;
+  replies: number;
+  engagementScore: number;
+}
+
 export class FarcasterHubClient {
   private hubUrl: string;
 
@@ -46,7 +58,7 @@ export class FarcasterHubClient {
   /**
    * Get casts by FID with pagination (simplified implementation)
    */
-  async getUserCasts(fid: number, pageToken?: string, limit: number = 100): Promise<any[]> {
+  async getUserCasts(): Promise<CastData[]> {
     try {
       // For now, return empty array
       // In a real implementation, this would fetch from Farcaster Hub
@@ -60,7 +72,7 @@ export class FarcasterHubClient {
   /**
    * Get cast reactions (likes, recasts, replies) - simplified implementation
    */
-  async getCastReactions(castHash: string) {
+  async getCastReactions() {
     try {
       // For now, return mock data
       // In a real implementation, this would fetch from Farcaster Hub
@@ -100,7 +112,8 @@ export class FarcasterHubClient {
   async getCast(hash: string) {
     try {
       // For now, return mock data
-      // In a real implementation, this would fetch from Farcaster Hub
+      // In a real implementation, this would fetch from Farcaster Hub using: hash
+      console.debug('Getting cast for hash:', hash);
       return {
         data: {
           castAddBody: {
@@ -131,7 +144,7 @@ export class FarcasterHubClient {
       }
 
       // Get reactions
-      const reactions = await this.getCastReactions(castHash);
+      const reactions = await this.getCastReactions();
       
       // Get user profile for follower count
       const profile = await this.getUserProfile(fid);

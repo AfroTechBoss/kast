@@ -19,14 +19,14 @@ export async function POST(req: NextRequest) {
     const user = await hubClient.syncUserData(fid);
 
     // Get recent casts for engagement processing
-    const casts = await hubClient.getUserCasts(fid, undefined, 50);
+    const casts = await hubClient.getUserCasts();
     
     let processedCasts = 0;
     const engagementPromises = [];
 
     for (const cast of casts) {
-      if (cast.hash) {
-        const castHash = cast.hash;
+      if (cast.castHash) {
+        const castHash = cast.castHash;
         
         // Process cast for engagement (async)
         const promise = hubClient.processCastForEngagement(

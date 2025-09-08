@@ -6,15 +6,13 @@ const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest): Promise<Response> {
   let accountAddress: string | undefined = '';
-  let text: string | undefined = '';
   let buttonIndex = 1;
 
   const body: FrameRequest = await req.json();
-  const { isValid, message } = await getFrameMessage(body, { neynarApiKey: 'NEYNAR_ONCHAIN_KIT' });
+  const { isValid, message } = await getFrameMessage(body);
 
   if (isValid) {
     accountAddress = message.interactor?.verified_accounts[0] || '';
-    text = message.input || '';
     buttonIndex = message.button || 1;
   }
 
@@ -87,13 +85,13 @@ export async function POST(req: NextRequest): Promise<Response> {
     );
   }
 
-  const claimableRewards = user.rewards.filter((r: any) => r.status === 'PENDING');
-  const totalClaimable = claimableRewards.reduce((sum: number, reward: any) => sum + reward.amount, 0);
+  const claimableRewards = user.rewards.filter((r) => r.status === 'PENDING');
+  const totalClaimable = claimableRewards.reduce((sum: number, reward) => sum + reward.amount, 0);
 
   if (buttonIndex === 1 && claimableRewards.length > 0) {
     // Process reward claiming
     try {
-      await prisma.$transaction(async (tx: any) => {
+      await prisma.$transaction(async (tx) => {
         // Update rewards to claimed
         await tx.reward.updateMany({
           where: {

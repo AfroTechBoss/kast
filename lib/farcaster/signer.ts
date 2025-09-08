@@ -20,8 +20,43 @@ export interface FarcasterUser {
   verifications: string[];
 }
 
+interface AuthenticatedUser {
+  user: {
+    id: string;
+    farcasterFid: string;
+    username: string;
+    displayName: string;
+    bio: string;
+    profileImageUrl: string;
+    engagementScore: number;
+    totalRewards: number;
+    followerCount: number;
+    followingCount: number;
+  };
+  session: {
+    token: string;
+    expiresAt: Date;
+  };
+}
+
+interface UserWithDetails {
+  id: string;
+  farcasterFid: string | null;
+  username: string | null;
+  displayName: string | null;
+  bio: string | null;
+  profileImageUrl: string | null;
+  engagementScore: number;
+  totalRewards: number;
+  followerCount: number;
+  followingCount: number;
+  walletAddress: string | null;
+  custodyAddress: string | null;
+  verifications: string[];
+}
+
 export class FarcasterSigner {
-  private appClient: any;
+  private appClient: ReturnType<typeof createAppClient>;
   private config: FarcasterAuthConfig;
 
   constructor(config: FarcasterAuthConfig) {
@@ -39,17 +74,13 @@ export class FarcasterSigner {
     channelToken: string;
   }> {
     try {
-      const channel = this.appClient.createChannel({
+      const { data: { channelToken } } = await this.appClient.createChannel({
         siweUri: this.config.siweUri,
         domain: this.config.domain,
-        nonce: this.config.nonce,
       });
 
-      const { channelToken } = channel;
-      const authUrl = this.appClient.createSignInMessage({
-        channelToken,
-        redirectUri,
-      });
+      // Create the auth URL - this should be the connect URL from the channel
+      const authUrl = `https://warpcast.com/~/sign-in-with-farcaster?channelToken=${channelToken}&redirectUri=${encodeURIComponent(redirectUri)}`;
 
       return {
         url: authUrl,
@@ -66,21 +97,44 @@ export class FarcasterSigner {
    */
   async verifyAuth(channelToken: string): Promise<FarcasterUser | null> {
     try {
-      const { success, fid, username, displayName, bio, pfpUrl, custodyAddress, verifications } = 
-        await this.appClient.verifySignInMessage({ channelToken });
+      // Get the status first to obtain the message and signature
+      const statusResponse = await this.appClient.status({ channelToken });
+      const statusData = statusResponse.data;
+      
+      if (statusData.state !== 'completed' || !statusData.message || !statusData.signature) {
+        return null;
+      }
+
+      const { data, success, fid } = await this.appClient.verifySignInMessage({
+        nonce: statusData.nonce,
+        domain: this.config.domain,
+        message: statusData.message,
+        signature: statusData.signature,
+        acceptAuthAddress: true
+      });
 
       if (!success || !fid) {
         return null;
       }
 
+      // Extract user data from the data object
+      const userData = data as unknown as {
+        username?: string;
+        displayName?: string;
+        bio?: string;
+        pfpUrl?: string;
+        custodyAddress: string;
+        verifications?: string[];
+      };
+
       return {
         fid,
-        username,
-        displayName,
-        bio,
-        pfpUrl,
-        custodyAddress,
-        verifications: verifications || [],
+        username: userData.username,
+        displayName: userData.displayName,
+        bio: userData.bio,
+        pfpUrl: userData.pfpUrl,
+        custodyAddress: userData.custodyAddress,
+        verifications: userData.verifications || [],
       };
     } catch (error) {
       console.error('Error verifying auth:', error);
@@ -126,7 +180,7 @@ export class FarcasterSigner {
   /**
    * Create or update user in database after successful authentication
    */
-  async authenticateUser(farcasterUser: FarcasterUser, walletAddress?: string): Promise<any> {
+  async authenticateUser(farcasterUser: FarcasterUser, walletAddress?: string): Promise<AuthenticatedUser> {
     try {
       // Sync latest data from Farcaster Hub
       const hubProfile = await hubClient.getUserProfile(farcasterUser.fid);
@@ -178,11 +232,11 @@ export class FarcasterSigner {
       return {
         user: {
           id: user.id,
-          farcasterFid: user.farcasterFid,
-          username: user.username,
-          displayName: user.displayName,
-          bio: user.bio,
-          profileImageUrl: user.profileImageUrl,
+          farcasterFid: user.farcasterFid || '',
+          username: user.username || '',
+          displayName: user.displayName || '',
+          bio: user.bio || '',
+          profileImageUrl: user.profileImageUrl || '',
           engagementScore: user.engagementScore,
           totalRewards: user.totalRewards,
           followerCount: user.followerCount,
@@ -202,7 +256,7 @@ export class FarcasterSigner {
   /**
    * Verify session token and get user
    */
-  async verifySession(sessionToken: string): Promise<any | null> {
+  async verifySession(sessionToken: string): Promise<UserWithDetails | null> {
     try {
       const session = await prisma.userSession.findFirst({
         where: {
@@ -285,7 +339,7 @@ export class FarcasterSigner {
   /**
    * Get user by FID
    */
-  async getUserByFid(fid: number): Promise<any | null> {
+  async getUserByFid(fid: number): Promise<UserWithDetails | null> {
     try {
       const user = await prisma.user.findFirst({
         where: {
@@ -311,7 +365,23 @@ export class FarcasterSigner {
         },
       });
 
-      return user;
+      if (!user) return null;
+      
+      return {
+        id: user.id,
+        farcasterFid: user.farcasterFid,
+        username: user.username,
+        displayName: user.displayName,
+        bio: user.bio,
+        profileImageUrl: user.profileImageUrl,
+        engagementScore: user.engagementScore,
+        totalRewards: user.totalRewards,
+        followerCount: user.followerCount,
+        followingCount: user.followingCount,
+        walletAddress: user.walletAddress,
+        custodyAddress: user.custodyAddress,
+        verifications: user.verifications,
+      };
     } catch (error) {
       console.error('Error getting user by FID:', error);
       return null;
@@ -321,7 +391,7 @@ export class FarcasterSigner {
   /**
    * Validate FID ownership using signature
    */
-  async validateFidOwnership(fid: number, signature: string, message: string): Promise<boolean> {
+  async validateFidOwnership(fid: number): Promise<boolean> {
     try {
       // This would typically involve verifying the signature against the FID's custody address
       // For now, we'll use a simplified validation

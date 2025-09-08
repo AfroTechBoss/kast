@@ -9,15 +9,13 @@ export async function POST(
   { params }: { params: { id: string } }
 ): Promise<Response> {
   let accountAddress: string | undefined = '';
-  let text: string | undefined = '';
   let buttonIndex = 1;
 
   const body: FrameRequest = await req.json();
-  const { isValid, message } = await getFrameMessage(body, { neynarApiKey: 'NEYNAR_ONCHAIN_KIT' });
+  const { isValid, message } = await getFrameMessage(body);
 
   if (isValid) {
     accountAddress = message.interactor?.verified_accounts[0] || '';
-    text = message.input || '';
     buttonIndex = message.button || 1;
   }
 

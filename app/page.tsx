@@ -2,8 +2,6 @@ import { Suspense } from 'react'
 import { Header } from '@/components/Header'
 import { CampaignCard } from '@/components/CampaignCard'
 import { BottomNav } from '@/components/BottomNav'
-import { LoadingSpinner } from '@/components/LoadingSpinner'
-import { getCampaigns } from '@/services/campaigns'
 
 // Mock data for development
 const mockCampaigns = [

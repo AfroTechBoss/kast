@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
 
   try {
 
-    const { action, targetType, targetId, castData, userId } = await req.json();
+    const { action, targetId, castData, userId } = await req.json();
 
     if (!action || !['moderate_cast', 'moderate_user', 'update_rule'].includes(action)) {
       return NextResponse.json(

@@ -24,10 +24,20 @@ function verifySignature(payload: string, signature: string, secret: string): bo
   );
 }
 
+interface CastData {
+  hash: string;
+  author: {
+    fid: number;
+    username: string;
+  };
+  text: string;
+  timestamp: string;
+}
+
 // Handle cast created events
-async function handleCastCreated(data: any) {
+async function handleCastCreated(data: CastData) {
   try {
-    const { hash, author, text, timestamp, parent_hash, parent_url } = data;
+    const { hash, author, text, timestamp } = data;
     
     console.log('Processing cast created:', {
       hash,
@@ -49,8 +59,21 @@ async function handleCastCreated(data: any) {
   }
 }
 
+interface ReactionData {
+  hash: string;
+  reaction_type: string;
+  timestamp: string;
+  cast: {
+    hash: string;
+  };
+  reactor: {
+    fid: number;
+    username: string;
+  };
+}
+
 // Handle reaction events
-async function handleReactionCreated(data: any) {
+async function handleReactionCreated(data: ReactionData) {
   try {
     const { reaction_type, cast, reactor } = data;
     
@@ -73,8 +96,20 @@ async function handleReactionCreated(data: any) {
   }
 }
 
+interface FollowData {
+  timestamp: string;
+  follower: {
+    fid: number;
+    username: string;
+  };
+  following: {
+    fid: number;
+    username: string;
+  };
+}
+
 // Handle follow events
-async function handleFollowCreated(data: any) {
+async function handleFollowCreated(data: FollowData) {
   try {
     const { follower, following } = data;
     
